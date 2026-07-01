@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "rush-ticketing-backend"
+version = "0.1.0"
+description = "대규모 트래픽 선착순 예매 시스템"
+authors = ["KNJ"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.0"
+uvicorn = {extras = ["standard"], version = "^0.32.0"}
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
+asyncpg = "^0.30.0"
+redis = "^5.2.0"
+pydantic-settings = "^2.6.0"
+alembic = "^1.18.5"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+httpx = "^0.27.0"
+psycopg2-binary = "^2.9.12"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
