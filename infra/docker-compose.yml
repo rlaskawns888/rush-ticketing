@@ -21,6 +21,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: rush-redis
+    command: redis-server --notify-keyspace-events Ex
     ports:
       - "6379:6379"
     healthcheck:
@@ -28,6 +29,36 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: rush-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      # broker(메시지 저장/전달)와 controller(클러스터 메타데이터 관리) 역할을
+      # 컨테이너 하나가 동시에 수행 -> Zookeeper 불필요 (KRaft 모드)
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # 로컬 단일 노드라 복제본 1개로 충분 (운영에서는 3 이상)
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: rush-kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
 
 volumes:
   postgres_data:

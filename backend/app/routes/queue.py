@@ -5,15 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from redis.asyncio import Redis
 
 from app.database import get_redis
+from app.redis_keys import queue_key, admit_key
 
 router = APIRouter(
     prefix="/queue",
     tags=["queue"]
 )
-
-def queue_key(train_id: str) -> str:
-    """  Redis: queue:{train_id} 열차마다 독립된 대기열을 갖도록 """
-    return f"queue:{train_id}"
 
 @router.post("/{train_id}/join")
 async def join_queue(train_id: str, redis: Redis = Depends(get_redis)):
@@ -27,20 +24,31 @@ async def join_queue(train_id: str, redis: Redis = Depends(get_redis)):
 
 @router.get("/{train_id}/status")
 async def queue_statue(train_id: str, token:str, redis: Redis = Depends(get_redis)):
-    """ 폴링용 엔드포인트, 클라이언트가 1~2초 마다 호출해서 자기 순번 확인 """
+    """ 
+        폴링용 엔드포인트, 클라이언트가 1~2초 마다 호출해서 자기 순번 확인 
+
+        - WAITING: 대기열 (순번 정보 포함)
+        - ADMITTED: 입장 (예매 API 호출 가능)
+        - 404 : X
+    """
     key = queue_key(train_id)
 
     rank = await redis.zrank(key, token)
-    if rank is None:
-        #대기열에 없다는 건
-        # (1) 아직  join을 안했거나, 
-        # (2) 이미 입장처리 되어서 대기열에서 빠졌거나
-        raise HTTPException(status_code=404, detail="대기열에 없는 토큰입니다(입장 or 만료)")
+    if rank is not None:
+        total = await redis.zcard(key)
+        return {
+            "state": "WAITING",
+            "rank": rank + 1,       #ZRANK 0부터 시작
+            "ahead_of_me": rank,    #내 앞에 대기중인 인원
+            "total_waiting": total, #전체 대기 인원
+        }
     
-    total = await redis.zcard(key)
-
-    return {
-        "rank": rank + 1,       #ZRANK 0부터 시작
-        "ahead_of_me": rank,    #내 앞에 대기중인 인원
-        "total_waiting": total, #전체 대기 인원
-    }
+    # 대기열 x -> 입장 처리 admit 키로 옮겨갔는지 확인 
+    ttl = await redis.ttl(admit_key(token)) 
+    if ttl and ttl > 0:
+        return {
+            "state": "ADMITTED",
+            "expires_in_seconds": ttl,
+        }
+    
+    raise HTTPException(status_code=404, detail="유효하지 않은 토큰 입니다")

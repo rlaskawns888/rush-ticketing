@@ -1,0 +1,26 @@
+:root {
+  /* Color */
+  --color-primary: #3182f6;
+  --color-primary-dark: #1b64da;
+  --color-primary-light: #e8f3ff;
+  --color-bg: #f2f4f6;
+  --color-surface: #ffffff;
+  --color-text: #191f28;
+  --color-text-secondary: #8b95a1;
+  --color-success: #00c4b3;
+  --color-success-light: #e6faf7;
+  --color-danger: #f04452;
+  --color-danger-light: #ffedee;
+  --color-border: #e5e8eb;
+
+  /* Radius */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  /* Shadow */
+  --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+
+  /* Font */
+  --font-base: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}

@@ -20,7 +20,8 @@ class Train(Base):
     __tablename__ = "trains"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String(100)) 
+    code: Mapped[str] = mapped_column(String(50), unique=True)  # 예: "train-001" (Redis 키, URL 등에서 사용)
+    name: Mapped[str] = mapped_column(String(100)) #KTX
     departure_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     total_seats: Mapped[int] = mapped_column(Integer)
 
@@ -44,8 +45,10 @@ class Seat(Base):
 
 class User(Base):
     __tablename__ = "users"
-
+ 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    username: Mapped[str] = mapped_column(String(50), unique=True)  # 로그인 아이디
+    password_hash: Mapped[str] = mapped_column(String(255))
     name: Mapped[str] = mapped_column(String(50))
 
 
@@ -76,6 +79,7 @@ class Reservation(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     seat_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("seats.id"))
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    hold_token: Mapped[str] = mapped_column(String(64))  # 로그인만으로 예약을 다시 찾을 수 있게 DB에도 저장
     status: Mapped[ReservationStatus] = mapped_column(
         Enum(ReservationStatus, name="reservation_status"),
         default=ReservationStatus.HELD,
