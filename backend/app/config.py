@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     redis_url: str
 
     #스케줄러 1s 대기열에서 꺼내는 인원 수
-    admit_batch_size: int = 60
+    admit_batch_size: int = 3
 
     #입장 토큰 유효 시간(초) - 시간 내 좌석 선택 않으면 토큰 만료 
     admit_ttl_seconds: int = 300
